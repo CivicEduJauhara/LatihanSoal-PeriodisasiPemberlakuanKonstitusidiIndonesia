@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Kuis Periodisasi Pemberlakuan UUD di Indonesia</title>
+    <!-- Memuat Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Konfigurasi Font dan Tema Tailwind --><script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'tema-hitam': '#0F172A',
+                        'ungu-gelap': '#3730A3', // Indigo 700
+                        'ungu-terang': '#8B5CF6', // Violet 500
+                        'aksen-merah': '#F87171', // Merah untuk salah
+                        'aksen-hijau': '#34D399', // Hijau untuk benar
+                        'kuning-emas': '#FACC15', // Kuning untuk nilai tinggi
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gaya kustom untuk nuansa ungu */
+        .card-ungu {
+            background-color: #1F2937; /* Gray-800 */
+            border-top: 5px solid #8B5CF6; /* Ungu Terang */
+        }
+        .btn-ungu {
+            background-color: #4F46E5; /* Indigo 600 */
+            transition: all 0.2s;
+        }
+        .btn-ungu:hover {
+            background-color: #6366F1; /* Indigo 500 */
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        .text-main {
+            color: #8B5CF6; /* Ungu Terang */
+        }
+    </style>
+</head>
+<body class="bg-tema-hitam text-white font-sans min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <div id="app-container" class="w-full max-w-4xl">
+        
+        <!-- Halaman 1: Form Identitas Siswa -->
+        <div id="login-screen" class="p-6 md:p-10 card-ungu rounded-xl shadow-2xl text-center">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-main mb-4">Selamat Datang di Kuis Periodisasi Pemberlakuan UUD di Indonesia</h1>
+            <p class="text-gray-400 mb-8">Silakan isi data diri Anda untuk memulai kuis.</p>
+            
+            <form id="identity-form" class="space-y-6 max-w-sm mx-auto">
+                <div>
+                    <label for="nama_siswa" class="block text-left text-sm font-medium text-gray-300 mb-1">Nama Siswa</label>
+                    <input type="text" id="nama_siswa" class="w-full p-3 rounded-lg bg-gray-700 border border-ungu-gelap focus:ring-ungu-terang focus:border-ungu-terang outline-none text-white" placeholder="Cth: Budi Santoso" required>
+                </div>
+                
+                <div>
+                    <label for="kelas_siswa" class="block text-left text-sm font-medium text-gray-300 mb-1">Kelas</label>
+                    <select id="kelas_siswa" class="w-full p-3 rounded-lg bg-gray-700 border border-ungu-gelap focus:ring-ungu-terang focus:border-ungu-terang outline-none text-white" required>
+                        <option value="" disabled selected>Pilih Kelas Anda</option>
+                        <option value="XI Science 1">XI Science 1</option>
+                        <option value="XI Science 2">XI Science 2</option>
+                        <option value="XI Science 3">XI Science 3</option>
+                        <option value="XI Social 1">XI Social 1</option>
+                        <option value="XI Social 2">XI Social 2</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full p-3 mt-4 rounded-lg text-white font-semibold btn-ungu shadow-lg shadow-ungu-terang/30">Mulai Kuis 30 Soal</button>
+            </form>
+        </div>
+
+        <!-- Halaman Kuis -->
+        <div id="quiz-screen" class="hidden p-6 md:p-10 card-ungu rounded-xl shadow-2xl">
+            <div id="quiz-header" class="mb-6 pb-4 border-b border-gray-700">
+                <h2 id="quiz-category-title" class="text-2xl font-bold text-main">Kuis Periodisasi UUD: Semua Kategori</h2>
+                <p class="text-sm text-gray-400">Soal ke <span id="current-question-number">1</span> dari <span id="total-questions">30</span></p>
+                <div class="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+                    <div id="progress-bar" class="bg-ungu-terang h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="question-area" class="space-y-6">
+                <p id="question-text" class="text-xl font-medium text-gray-200"></p>
+                
+                <div id="answer-options" class="space-y-3">
+                    <!-- Opsi jawaban akan di-render di sini -->
+                </div>
+
+                <div id="feedback-area" class="p-4 rounded-xl text-sm hidden border">
+                    <p id="rationale-text" class="text-gray-200 font-medium"></p>
+                    <p id="hint-text" class="text-gray-400 mt-1 italic"></p>
+                </div>
+            </div>
+
+            <!-- Kontrol Navigasi Kuis -->
+            <div class="flex justify-between items-center mt-8 pt-4 border-t border-gray-700">
+                <!-- Tombol Soal Sebelumnya -->
+                <button onclick="prevQuestion()" id="prev-btn" class="p-3 rounded-lg text-white font-semibold bg-gray-600 hover:bg-gray-700 transition duration-200" disabled>&laquo; Soal Sebelumnya</button>
+                
+                <div class="flex space-x-4">
+                    <!-- Tombol Jawab (Submit) -->
+                    <button onclick="checkAnswer()" id="submit-btn" class="p-3 rounded-lg text-white font-semibold btn-ungu shadow-md">Jawab</button>
+                    <!-- Tombol Soal Berikutnya -->
+                    <button onclick="nextQuestion()" id="next-btn" class="p-3 rounded-lg text-white font-semibold bg-gray-600 hover:bg-gray-700 transition duration-200" disabled>Soal Berikutnya &raquo;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Halaman 4: Hasil Kuis (Diperbarui) -->
+        <div id="results-screen" class="hidden p-6 md:p-10 card-ungu rounded-xl shadow-2xl text-center">
+            <h2 class="text-4xl font-extrabold text-main mb-4">Hasil Kuis Anda</h2>
+            <p class="text-xl text-gray-300 mb-6">Siswa: <span id="result-name" class="font-semibold text-ungu-terang"></span> | Kelas: <span id="result-class" class="font-semibold text-ungu-terang"></span></p>
+            
+            <div class="bg-ungu-gelap p-8 rounded-xl inline-block shadow-xl">
+                <p class="text-5xl font-bold text-white">Skor Anda (0-100):</p>
+                <p id="final-score" class="text-7xl font-extrabold text-aksen-hijau mt-2"></p>
+                <!-- Elemen baru untuk menampilkan jumlah jawaban benar -->
+                <p id="correct-answers-display" class="text-xl text-gray-400 mt-4 font-medium"></p>
+            </div>
+
+            <p id="score-message" class="text-2xl mt-6 font-medium"></p>
+            
+            <button onclick="resetQuiz()" class="p-3 mt-8 rounded-lg text-white font-semibold btn-ungu shadow-lg shadow-ungu-terang/30">Ulangi Kuis</button>
+        </div>
+    </div>
+
+    <script>
+        // Data Kuis (Menggunakan data periodisasi UUD yang terakhir)
+        const initialQuestions = {
+            mudah: [
+                { q: "Periode konstitusi manakah yang berlaku dengan rentang waktu paling singkat di Indonesia?", ans: 2, cat: "Mudah", options: [
+                    { text: "Periode 1: UUD 1945 Asli", correct: false, rationale: "Periode ini berlangsung sekitar 4 tahun (1945-1949), bukan yang tersingkat." },
+                    { text: "Periode 2: Konstitusi RIS 1949", correct: true, rationale: "Konstitusi RIS berlaku paling singkat, hanya kurang dari satu tahun (Desember 1949 - Agustus 1950)." },
+                    { text: "Periode 3: UUDS 1950", correct: false, rationale: "Periode ini berlangsung sekitar 9 tahun (1950-1959)." },
+                    { text: "Periode 4: UUD 1945 Orla & Orba", correct: false, rationale: "Periode ini berlangsung sangat lama, dari tahun 1959 hingga 1998." }
+                ]},
+                { q: "Apa nama konstitusi yang berlaku antara 17 Agustus 1950 hingga 5 Juli 1959?", ans: 3, cat: "Mudah", options: [
+                    { text: "UUD 1945", correct: false, rationale: "UUD 1945 berlaku sebelum (1945-1949) dan setelah (1959-1998) periode ini." },
+                    { text: "Konstitusi RIS 1949", correct: false, rationale: "Konstitusi RIS 1949 berakhir pada 17 Agustus 1950." },
+                    { text: "Undang-Undang Dasar Sementara (UUDS) 1950", correct: true, rationale: "UUDS 1950 berlaku sejak kembali ke bentuk Negara Kesatuan hingga Dekrit Presiden 1959." },
+                    { text: "UUD NRI 1945 Amandemen", correct: false, rationale: "UUD Amandemen baru berlaku setelah tahun 1999." }
+                ]},
+                { q: "Peristiwa penting apakah yang menandai kembalinya Indonesia ke UUD 1945 pada tahun 1959?", ans: 1, cat: "Mudah", options: [
+                    { text: "Dekrit Presiden 5 Juli 1959", correct: true, rationale: "Dekrit Presiden 5 Juli 1959 membubarkan Konstituante dan menyatakan kembali ke UUD 1945." },
+                    { text: "Proklamasi Kemerdekaan", correct: false, rationale: "Proklamasi Kemerdekaan terjadi pada tahun 1945." },
+                    { text: "Konferensi Meja Bundar (KMB)", correct: false, rationale: "KMB pada tahun 1949 justru melahirkan Konstitusi RIS." },
+                    { text: "Supersemar 1966", correct: false, rationale: "Supersemar adalah pengalihan kekuasaan setelah periode ini." }
+                ]},
+                { q: "Pada periode mana sistem Pemerintahan Parlementer Liberal diterapkan di Indonesia?", ans: 3, cat: "Mudah", options: [
+                    { text: "Periode 1: UUD 1945 Asli", correct: false, rationale: "Periode 1 menerapkan sistem presidensial, meskipun sempat bergeser ke semi-parlementer." },
+                    { text: "Periode 4: UUD 1945 Orla & Orba", correct: false, rationale: "Periode ini kembali ke sistem presidensial yang otoriter." },
+                    { text: "Periode 3: UUDS 1950", correct: true, rationale: "Sistem Parlementer Liberal adalah ciri khas UUDS 1950, ditandai dengan seringnya pergantian kabinet." },
+                    { text: "Periode 5: UUD NRI 1945 Amandemen", correct: false, rationale: "Periode 5 menerapkan sistem presidensial dengan check and balances yang kuat." }
+                ]},
+                { q: "Apa bentuk negara Indonesia ketika Konstitusi RIS 1949 berlaku?", ans: 4, cat: "Mudah", options: [
+                    { text: "Kesatuan", correct: false, rationale: "Bentuk Kesatuan berlaku pada Periode 1, 3, 4, dan 5." },
+                    { text: "Monarki", correct: false, rationale: "Indonesia selalu berbentuk Republik." },
+                    { text: "Konfederasi", correct: false, rationale: "Konfederasi adalah bentuk kerjasama antarnegara berdaulat." },
+                    { text: "Serikat / Federasi", correct: true, rationale: "Konstitusi RIS 1949 adalah hasil KMB, yang membentuk Republik Indonesia Serikat (RIS) sebagai negara federal." }
+                ]},
+                { q: "UUD 1945 setelah masa Reformasi diamandemen sebanyak berapa kali?", ans: 2, cat: "Mudah", options: [
+                    { text: "2 kali", correct: false, rationale: "Amandemen dilakukan lebih dari dua kali." },
+                    { text: "4 kali", correct: true, rationale: "Amandemen dilakukan sebanyak 4 kali, yaitu dari tahun 1999 hingga 2002." },
+                    { text: "5 kali", correct: false, rationale: "Jumlah amandemen yang dilakukan adalah 4 kali." },
+                    { text: "Tidak pernah diamandemen", correct: false, rationale: "Justru amandemen adalah salah satu tuntutan utama Reformasi." }
+                ]},
+                { q: "Lembaga negara baru yang dibentuk setelah amandemen UUD 1945 (Periode 5) yang bertugas menguji undang-undang terhadap UUD adalah...", ans: 1, cat: "Mudah", options: [
+                    { text: "Mahkamah Konstitusi (MK)", correct: true, rationale: "MK dibentuk untuk menguji undang-undang (judicial review) terhadap UUD NRI Tahun 1945." },
+                    { text: "Mahkamah Agung (MA)", correct: false, rationale: "MA sudah ada dan bertugas menguji peraturan di bawah undang-undang." },
+                    { text: "Dewan Perwakilan Rakyat (DPR)", correct: false, rationale: "DPR adalah lembaga legislatif." },
+                    { text: "Komisi Yudisial (KY)", correct: false, rationale: "KY bertugas mengawasi kehormatan, keluhuran martabat, dan perilaku hakim." }
+                ]},
+                { q: "Siapa yang menetapkan UUD 1945 pertama kali setelah proklamasi kemerdekaan?", ans: 4, cat: "Mudah", options: [
+                    { text: "Badan Penyelidik Usaha Persiapan Kemerdekaan Indonesia (BPUPKI)", correct: false, rationale: "BPUPKI bertugas merancang dasar negara dan UUD." },
+                    { text: "Komite Nasional Indonesia Pusat (KNIP)", correct: false, rationale: "KNIP berfungsi sebagai badan legislatif sementara." },
+                    { text: "Presiden Soekarno", correct: false, rationale: "Presiden Soekarno mengesahkan sebagai bagian dari keputusan lembaga." },
+                    { text: "Panitia Persiapan Kemerdekaan Indonesia (PPKI)", correct: true, rationale: "PPKI pada tanggal 18 Agustus 1945 menetapkan UUD 1945 dan memilih Presiden serta Wakil Presiden." }
+                ]},
+                { q: "Bentuk pemerintahan yang menempatkan menteri bertanggung jawab kepada parlemen (legislatif) disebut sistem...", ans: 2, cat: "Mudah", options: [
+                    { text: "Presidensial", correct: false, rationale: "Dalam presidensial, menteri bertanggung jawab kepada Presiden." },
+                    { text: "Parlementer", correct: true, rationale: "Dalam parlementer, kepala pemerintahan (Perdana Menteri) dan menteri bertanggung jawab kepada parlemen." },
+                    { text: "Monarki Konstitusional", correct: false, rationale: "Ini adalah bentuk negara, bukan sistem pemerintahan." },
+                    { text: "Totaliter", correct: false, rationale: "Ini adalah sistem politik, bukan bentuk pemerintahan." }
+                ]},
+                { q: "Apa faktor utama yang menyebabkan bubarnya Konstitusi RIS dan lahirnya UUDS 1950?", ans: 3, cat: "Mudah", options: [
+                    { text: "Perang Dingin", correct: false, rationale: "Walaupun terjadi, bukan faktor langsung penyebab bubarnya RIS." },
+                    { text: "Krisis Ekonomi Global", correct: false, rationale: "Krisis ekonomi memperburuk keadaan, tetapi bukan penyebab utama." },
+                    { text: "Tuntutan rakyat untuk kembali ke Negara Kesatuan", correct: true, rationale: "RIS dianggap bentukan Belanda dan tidak sesuai dengan cita-cita proklamasi, memicu tuntutan kembali ke NKRI." },
+                    { text: "Adanya Dekrit Presiden", correct: false, rationale: "Dekrit Presiden terjadi 9 tahun setelah RIS bubar." }
+                ]}
+            ],
+            penerapan: [
+                { q: "Mengapa Maklumat Wakil Presiden No. X/1945 dianggap sebagai penyimpangan terhadap UUD 1945 Asli, dan apa dampaknya pada sistem pemerintahan?", ans: 4, cat: "Penerapan", options: [
+                    { text: "Mengubah bentuk negara dari Kesatuan menjadi Serikat.", correct: false, rationale: "Bentuk negara tetap kesatuan, tetapi sistem pemerintahannya yang berubah." },
+                    { text: "Menyebabkan kegagalan Pemilu 1955.", correct: false, rationale: "Maklumat ini tidak ada hubungannya dengan kegagalan Pemilu 1955." },
+                    { text: "Mengganti Presiden Soekarno dengan Wakil Presiden Hatta.", correct: false, rationale: "Maklumat tidak mengganti Presiden, tetapi membatasi kekuasaannya." },
+                    { text: "Mengalihkan kekuasaan legislatif dari Presiden ke KNIP, mengubah sistem dari presidensial murni menjadi semi-parlementer.", correct: true, rationale: "UUD 1945 asli (sebelum Maklumat) memberikan kekuasaan legislatif kepada Presiden/PPKI, dan pengalihan ini menciptakan sistem semi-parlementer." }
+                ]},
+                { q: "Jika sebuah negara bagian dalam Konstitusi RIS ingin bergabung dengan Republik Indonesia (RI), hal ini mencerminkan kegagalan pada aspek...", ans: 1, cat: "Penerapan", options: [
+                    { text: "Bentuk Negara Federal", correct: true, rationale: "Keinginan bergabung ke RI menunjukkan bentuk federal (Serikat) tidak diterima oleh rakyat dan bertentangan dengan semangat kesatuan." },
+                    { text: "Sistem Pemerintahan Parlementer", correct: false, rationale: "Sistem pemerintahan (parlementer) berbeda dengan bentuk negara (federal)." },
+                    { text: "Pengakuan Kedaulatan Internasional", correct: false, rationale: "RIS justru diakui kedaulatannya secara internasional." },
+                    { text: "Pembentukan Lembaga Yudikatif", correct: false, rationale: "Hal ini tidak terkait langsung dengan fungsi lembaga yudikatif." }
+                ]},
+                { q: "Sistem multipartai yang ekstrem pada Periode UUDS 1950 berdampak langsung pada...", ans: 2, cat: "Penerapan", options: [
+                    { text: "Pembatasan Hak Asasi Manusia (HAM).", correct: false, rationale: "Periode ini justru dikenal dengan tingginya kebebasan politik dan HAM." },
+                    { text: "Ketidakstabilan politik karena seringnya pergantian kabinet (Kabinet Jatuh Bangun).", correct: true, rationale: "Banyaknya partai dengan kepentingan berbeda membuat koalisi tidak stabil dan kabinet mudah dijatuhkan oleh parlemen." },
+                    { text: "Dominasi kekuasaan eksekutif (Presiden) yang absolut.", correct: false, rationale: "Justru kekuasaan terbesar berada di tangan parlemen (Parlementer Liberal)." },
+                    { text: "Kenaikan harga minyak secara drastis.", correct: false, rationale: "Ini adalah faktor ekonomi luar negeri, bukan dampak langsung sistem multipartai." }
+                ]},
+                { q: "Jika Presiden pada masa Orde Baru (Periode 4) memiliki kekuasaan legislatif dan eksekutif yang sangat besar, maka prinsip konstitusi yang paling terlanggar adalah...", ans: 3, cat: "Penerapan", options: [
+                    { text: "Prinsip Otonomi Daerah.", correct: false, rationale: "Otonomi daerah dilanggar, tetapi dominasi eksekutif melanggar prinsip yang lebih mendasar." },
+                    { text: "Prinsip Negara Hukum.", correct: false, rationale: "Prinsip negara hukum terlanggar, tetapi ini adalah hasil dari pelanggaran prinsip pembagian kekuasaan." },
+                    { text: "Prinsip Trias Politika (Pembagian Kekuasaan).", correct: true, rationale: "Dominasi kekuasaan Presiden menunjukkan tidak adanya pemisahan atau pembagian kekuasaan yang seimbang (check and balances)." },
+                    { text: "Prinsip Demokrasi Langsung.", correct: false, rationale: "Sistem pemilihan tetap langsung, tetapi proses politiknya yang tidak demokratis." }
+                ]},
+                { q: "Konsekuensi dari adanya Mahkamah Konstitusi (MK) pada Periode 5 adalah...", ans: 2, cat: "Penerapan", options: [
+                    { text: "Presiden dapat mengeluarkan Dekrit untuk membubarkan DPR.", correct: false, rationale: "Fungsi MK justru membatasi kekuasaan Presiden/Pemerintah." },
+                    { text: "Adanya pengujian undang-undang (judicial review) terhadap UUD, memastikan konstitusionalitas hukum.", correct: true, rationale: "Fungsi utama MK adalah menjaga supremasi konstitusi melalui pengujian undang-undang." },
+                    { text: "Pergantian kabinet menjadi sering karena adanya pengawasan yudikatif.", correct: false, rationale: "Sistem presidensial modern membatasi frekuensi pergantian kabinet." },
+                    { text: "DPR kehilangan hak untuk mengajukan usulan amandemen UUD.", correct: false, rationale: "DPR tetap memiliki hak amandemen, tetapi harus melalui mekanisme yang ketat." }
+                ]},
+                { q: "Kembalinya Indonesia ke UUD 1945 melalui Dekrit Presiden 5 Juli 1959 secara legal-formal mengakhiri masa...", ans: 1, cat: "Penerapan", options: [
+                    { text: "UUDS 1950", correct: true, rationale: "Dekrit Presiden 5 Juli 1959 menyatakan UUDS 1950 tidak berlaku lagi dan kembali ke UUD 1945." },
+                    { text: "Konstitusi RIS 1949", correct: false, rationale: "RIS sudah berakhir pada tahun 1950." },
+                    { text: "UUD NRI 1945 Amandemen", correct: false, rationale: "Amandemen UUD 1945 baru dimulai 40 tahun setelah Dekrit." },
+                    { text: "Demokrasi Terpimpin", correct: false, rationale: "Dekrit 1959 justru menjadi awal dari masa Demokrasi Terpimpin." }
+                ]},
+                { q: "Bandingkan kelebihan utama Periode UUDS 1950 dan Periode Amandemen UUD 1945.", ans: 3, cat: "Penerapan", options: [
+                    { text: "UUDS 1950: Stabilitas Politik Tinggi; Amandemen: Otonomi Daerah Terbatas.", correct: false, rationale: "UUDS 1950 memiliki stabilitas politik yang sangat rendah." },
+                    { text: "UUDS 1950: Pembangunan Ekonomi Cepat; Amandemen: Demokrasi Semu.", correct: false, rationale: "Periode Amandemen dikenal sebagai masa demokrasi yang lebih terbuka." },
+                    { text: "UUDS 1950: Kebebasan Berpendapat & Pemilu Demokratis; Amandemen: Pembatasan Kekuasaan Presiden & Check and Balances.", correct: true, rationale: "UUDS 1950 menonjolkan kebebasan politik, sementara Amandemen menonjolkan sistem ketatanegaraan yang lebih demokratis." },
+                    { text: "UUDS 1950: Dominasi Eksekutif; Amandemen: Sentralisasi Kekuasaan.", correct: false, rationale: "Kedua periode ini justru menghindari dominasi eksekutif." }
+                ]},
+                { q: "Pembentukan Dewan Perwakilan Daerah (DPD) setelah amandemen UUD 1945 menunjukkan upaya untuk memperkuat aspek...", ans: 4, cat: "Penerapan", options: [
+                    { text: "Kekuasaan Moneter.", correct: false, rationale: "Kekuasaan moneter dipegang oleh Bank Indonesia." },
+                    { text: "Kekuasaan Eksekutif.", correct: false, rationale: "DPD adalah bagian dari legislatif." },
+                    { text: "Sentralisasi Pemerintahan.", correct: false, rationale: "DPD dibentuk untuk mewakili daerah, mendukung desentralisasi." },
+                    { text: "Representasi Daerah dan Desentralisasi (Federalisme Semu).", correct: true, rationale: "DPD adalah perwakilan daerah di tingkat pusat, memberikan suara daerah dalam proses legislasi, meskipun dalam bingkai Negara Kesatuan." }
+                ]},
+                { q: "Mengapa Dekrit Presiden 1959 bisa dikatakan sebagai solusi sekaligus sumber masalah?", ans: 1, cat: "Penerapan", options: [
+                    { text: "Solusi karena mengatasi kegagalan Konstituante, tetapi masalah karena menjadi pintu masuk bagi otoritarianisme Presidensial.", correct: true, rationale: "Dekrit menghentikan kebuntuan politik UUDS 1950 tetapi juga mengembalikan UUD 1945 yang kemudian disalahgunakan oleh Presiden." },
+                    { text: "Solusi karena mengakhiri RIS, tetapi masalah karena memicu Pemilu 1955.", correct: false, rationale: "RIS berakhir tahun 1950 dan Pemilu terjadi sebelum Dekrit." },
+                    { text: "Solusi karena menciptakan DPD, tetapi masalah karena membatasi HAM.", correct: false, rationale: "DPD dibentuk pada Periode 5, bukan Dekrit 1959." },
+                    { text: "Solusi karena membuat Indonesia berbentuk Kesatuan, tetapi masalah karena mengganggu pembangunan ekonomi.", correct: false, rationale: "Bentuk Kesatuan sudah kembali sejak 1950." }
+                ]},
+                { q: "Setelah Konferensi Meja Bundar (KMB), bentuk konstitusi yang secara efektif 'diterapkan' di Indonesia adalah...", ans: 3, cat: "Penerapan", options: [
+                    { text: "UUD 1945 Asli", correct: false, rationale: "UUD 1945 Asli berakhir sebelum KMB." },
+                    { text: "UUDS 1950", correct: false, rationale: "UUDS 1950 baru berlaku setelah RIS bubar." },
+                    { text: "Konstitusi RIS 1949", correct: true, rationale: "KMB menghasilkan pengakuan kedaulatan dalam bentuk Negara Federasi yang diatur oleh Konstitusi RIS." },
+                    { text: "UUD NRI 1945 Amandemen", correct: false, rationale: "Ini adalah konstitusi masa Reformasi." }
+                ]}
+            ],
+            analisis: [
+                { q: "Pemerintah saat ini memberlakukan UU yang membatasi masa jabatan kepala negara maksimal dua periode, memiliki lembaga yang berwenang menguji UU, dan menerapkan otonomi daerah luas. Periode sejarah konstitusi Indonesia manakah yang paling mendekati situasi ini?", ans: 4, cat: "Analisis", options: [
+                    { text: "Periode 1: UUD 1945 Asli", correct: false, rationale: "UUD 1945 Asli tidak membatasi masa jabatan Presiden secara tegas dan belum ada lembaga penguji UU." },
+                    { text: "Periode 3: UUDS 1950", correct: false, rationale: "UUDS 1950 menggunakan sistem parlementer dan tidak memiliki lembaga penguji UU seperti MK." },
+                    { text: "Periode 4: UUD 1945 Orla & Orba", correct: false, rationale: "Periode ini dikenal tanpa pembatasan masa jabatan dan dominasi eksekutif yang kuat." },
+                    { text: "Periode 5: UUD NRI 1945 Amandemen", correct: true, rationale: "Pembatasan masa jabatan, pembentukan MK, dan otonomi daerah yang luas adalah ciri utama hasil amandemen UUD NRI 1945." }
+                ]},
+                { q: "Di tengah perjuangan kemerdekaan, pemerintah mengeluarkan kebijakan yang mengalihkan kekuasaan legislatif dari tangan Presiden ke KNIP. Apa nama dokumen kebijakan tersebut dan apa dampaknya pada pemahaman awal tentang UUD 1945?", ans: 1, cat: "Analisis", options: [
+                    { text: "Maklumat Wakil Presiden No. X/1945, yang menyebabkan sistem pemerintahan bergeser menjadi semi-parlementer.", correct: true, rationale: "Maklumat ini adalah penyimpangan dari UUD 1945 asli (presidensial murni) dan memungkinkan KNIP melakukan fungsi legislatif." },
+                    { text: "Dekrit Presiden 5 Juli 1959, yang mengembalikan ke presidensial murni.", correct: false, rationale: "Dekrit terjadi jauh setelahnya dan tujuannya berbeda." },
+                    { text: "Peraturan Pemerintah No. 2/1946, yang menetapkan UUDS 1950.", correct: false, rationale: "UUDS 1950 ditetapkan melalui UU Federal, bukan Peraturan Pemerintah ini." },
+                    { text: "Piagam Jakarta 22 Juni 1945, yang menetapkan Pancasila.", correct: false, rationale: "Piagam Jakarta adalah rancangan dasar negara, bukan kebijakan sistem pemerintahan." }
+                ]},
+                { q: "Pada tahun 1953, Kabinet D jatuh karena pertentangan antarpartai dalam parlemen mengenai kebijakan luar negeri. Peristiwa ini sangat umum terjadi pada periode tersebut. Kondisi politik ini adalah ciri khas dari periode...", ans: 2, cat: "Analisis", options: [
+                    { text: "Periode 4: UUD 1945 Orla", correct: false, rationale: "Pada periode Orla, kabinet tidak mudah jatuh karena didominasi oleh kekuasaan Presiden." },
+                    { text: "Periode 3: UUDS 1950 / Parlementer Liberal", correct: true, rationale: "Sistem parlementer liberal dan multipartai ekstrem menyebabkan koalisi rapuh dan seringnya kabinet jatuh bangun (ketidakstabilan)." },
+                    { text: "Periode 2: Konstitusi RIS", correct: false, rationale: "RIS berumur sangat pendek, ketidakstabilan lebih karena bentuk negara, bukan sistem kabinet yang sering jatuh." },
+                    { text: "Periode 5: Amandemen UUD 1945", correct: false, rationale: "Sistem presidensial modern membatasi peran parlemen menjatuhkan kabinet." }
+                ]},
+                { q: "Mengapa masa Orde Baru (Periode 4) dikatakan menerapkan UUD 1945 secara 'tidak murni'?", ans: 3, cat: "Analisis", options: [
+                    { text: "Karena mengubah bentuk negara menjadi serikat.", correct: false, rationale: "Bentuk negara tetap kesatuan (NKRI)." },
+                    { text: "Karena tidak melaksanakan Pemilu secara rutin.", correct: false, rationale: "Pemilu tetap dilaksanakan, tetapi kurang demokratis." },
+                    { text: "Karena terjadi penyimpangan berupa sentralisasi kekuasaan dan dominasi eksekutif yang menghilangkan 'check and balances'.", correct: true, rationale: "Penyalahgunaan kekuasaan oleh Presiden (autoritarianisme) bertentangan dengan semangat UUD 1945." },
+                    { text: "Karena gagalnya Dewan Konstituante menyusun UUD definitif.", correct: false, rationale: "Kegagalan Konstituante adalah alasan Dekrit 1959, bukan ciri penerapan UUD 1945 Orde Baru." }
+                ]},
+                { q: "Negara X, yang baru merdeka, dipaksa oleh kekuatan asing untuk mengadopsi bentuk federasi (serikat). Bentuk ini terbukti tidak stabil dan rakyatnya menuntut pembubaran federasi. Pengalaman Negara X ini paling mirip dengan transisi konstitusi Indonesia dari periode ke periode mana?", ans: 4, cat: "Analisis", options: [
+                    { text: "Dari Periode 3 ke Periode 4", correct: false, rationale: "Transisi ini dari parlementer ke presidensial melalui Dekrit." },
+                    { text: "Dari Periode 4 ke Periode 5", correct: false, rationale: "Transisi ini dari otoriter ke demokratis melalui Amandemen." },
+                    { text: "Dari Periode 5 ke masa depan.", correct: false, rationale: "Periode 5 adalah periode terakhir (saat ini)." },
+                    { text: "Dari Periode 1 (UUD 1945) ke Periode 2 (Konstitusi RIS)", correct: true, rationale: "Indonesia dipaksa menerima RIS (federasi) hasil KMB, yang kemudian dibubarkan karena tuntutan rakyat untuk kembali ke Negara Kesatuan." }
+                ]},
+                { q: "Sebuah komite ditugaskan merumuskan konstitusi baru secara permanen. Setelah bertahun-tahun bersidang, komite tersebut gagal mencapai kesepakatan karena perbedaan ideologi yang tajam. Gagalnya komite ini akhirnya memicu Dekrit Presiden. Komite apakah yang dimaksud, dan pada periode manakah peristiwa ini terjadi?", ans: 1, cat: "Analisis", options: [
+                    { text: "Dewan Konstituante; Terjadi pada akhir Periode 3 (UUDS 1950).", correct: true, rationale: "Dewan Konstituante adalah badan yang dibentuk melalui Pemilu 1955 untuk merumuskan UUD definitif, dan kegagalannya menyebabkan Dekrit 5 Juli 1959." },
+                    { text: "Majelis Permusyawaratan Rakyat (MPR); Terjadi pada Periode 4 (Orla).", correct: false, rationale: "MPR adalah lembaga negara, bukan komite perumus UUD." },
+                    { text: "Panitia Persiapan Kemerdekaan Indonesia (PPKI); Terjadi pada Periode 1.", correct: false, rationale: "PPKI berhasil menetapkan UUD 1945, tidak gagal." },
+                    { text: "Mahkamah Konstitusi (MK); Terjadi pada Periode 5.", correct: false, rationale: "MK adalah lembaga penguji UU, bukan perumus UUD, dan dibentuk pada Periode 5." }
+                ]},
+                { q: "Apa perbedaan filosofis mendasar antara Dekrit Presiden 5 Juli 1959 dan Amandemen UUD 1945 pasca-Reformasi?", ans: 4, cat: "Analisis", options: [
+                    { text: "Dekrit: Memperkuat legislatif; Amandemen: Memperkuat eksekutif.", correct: false, rationale: "Dekrit justru memperkuat eksekutif, dan Amandemen membatasi eksekutif." },
+                    { text: "Dekrit: Mengakhiri RIS; Amandemen: Mengakhiri UUDS 1950.", correct: false, rationale: "Dekrit mengakhiri UUDS 1950, dan RIS berakhir tahun 1950." },
+                    { text: "Dekrit: Meningkatkan kebebasan berpendapat; Amandemen: Mengurangi kebebasan.", correct: false, rationale: "Amandemen justru meningkatkan kebebasan dan perlindungan HAM." },
+                    { text: "Dekrit: Kembali ke UUD 1945 Asli dengan sentralisasi kekuasaan; Amandemen: Memperbarui UUD 1945 untuk membatasi kekuasaan dan memperkuat check and balances.", correct: true, rationale: "Dekrit bertujuan untuk stabilitas melalui sentralisasi (Orla), sementara Amandemen bertujuan untuk demokrasi melalui pembatasan kekuasaan." }
+                ]},
+                { q: "Jika konstitusi suatu negara secara eksplisit menyebutkan bahwa menteri bertanggung jawab kepada Kepala Negara (Presiden) dan bukan kepada Badan Legislatif, sistem pemerintahan ini akan identik dengan masa...", ans: 1, cat: "Analisis", options: [
+                    { text: "Periode UUD 1945 (Presidensial Murni atau Orla/Orba)", correct: true, rationale: "Sistem presidensial murni (UUD 1945) menunjukkan menteri bertanggung jawab penuh kepada Presiden sebagai kepala eksekutif dan kepala negara." },
+                    { text: "Periode Konstitusi RIS 1949", correct: false, rationale: "RIS menggunakan sistem parlementer, di mana menteri bertanggung jawab kepada Parlemen." },
+                    { text: "Periode UUDS 1950", correct: false, rationale: "UUDS 1950 menggunakan sistem parlementer liberal." },
+                    { text: "Transisi dari RIS ke UUDS 1950", correct: false, rationale: "Transisi tersebut tetap menggunakan sistem parlementer." }
+                ]},
+                { q: "Tuntutan Reformasi 1998 untuk amandemen UUD 1945 terjadi terutama karena praktik pemerintahan pada periode sebelumnya (Orde Baru) melanggar prinsip...", ans: 2, cat: "Analisis", options: [
+                    { text: "Prinsip Negara Federal.", correct: false, rationale: "Indonesia tetap negara kesatuan." },
+                    { text: "Prinsip Pembatasan Masa Jabatan dan Rule of Law (Aturan Hukum).", correct: true, rationale: "Orde Baru tidak membatasi masa jabatan presiden dan sering melanggar aturan hukum (otoritarianisme), yang menjadi target utama amandemen." },
+                    { text: "Prinsip Monarki Konstitusional.", correct: false, rationale: "Indonesia adalah republik." },
+                    { text: "Prinsip Otonomi Pusat yang Lemah.", correct: false, rationale: "Justru otonomi pusat (Pemerintah Pusat) terlalu kuat/sentralistik." }
+                ]},
+                { q: "Setelah pengakuan kedaulatan, Indonesia dibagi menjadi beberapa negara bagian. Hal ini membuat Republik Indonesia kehilangan wilayah dan kekuatannya. Dalam waktu kurang dari setahun, bentuk negara ini dibubarkan. Konstitusi apakah yang digunakan selama masa tersebut?", ans: 4, cat: "Analisis", options: [
+                    { text: "UUD 1945 Amandemen", correct: false, rationale: "Amandemen UUD terjadi setelah tahun 1999." },
+                    { text: "Dekrit Presiden 5 Juli 1959", correct: false, rationale: "Dekrit justru untuk mengakhiri periode setelah konstitusi ini." },
+                    { text: "UUDS 1950", correct: false, rationale: "UUDS 1950 berlaku setelah konstitusi ini dibubarkan." },
+                    { text: "Konstitusi RIS 1949", correct: true, rationale: "Konstitusi RIS adalah yang membagi Indonesia menjadi negara federal (serikat) dan hanya berlaku singkat (Desember 1949 - Agustus 1950)." }
+                ]}
+            ]
+        };
+
+        let studentData = { name: '', class: '' };
+        let currentQuiz = [];
+        let currentQuestionIndex = 0;
+        let correctAnswersScore = 0; // Menggunakan ini untuk melacak jumlah jawaban benar
+
+        // --- Fungsi Utama Navigasi dan Utility ---
+        function showScreen(id) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        document.getElementById('identity-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            studentData.name = document.getElementById('nama_siswa').value.trim();
+            studentData.class = document.getElementById('kelas_siswa').value;
+
+            if (studentData.name && studentData.class) {
+                startQuiz(); 
+            } else {
+                showMessageBox('Peringatan', 'Mohon lengkapi semua data diri (Nama dan Kelas) untuk memulai kuis.');
+            }
+        });
+
+        function showMessageBox(title, message) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            messageBox.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg shadow-xl text-center border-t-4 border-ungu-terang w-80">
+                    <p class="text-white text-lg font-bold mb-3">${title}</p>
+                    <p class="text-gray-300 mb-4">${message}</p>
+                    <button onclick="this.parentNode.parentNode.remove()" class="p-2 px-4 rounded-lg text-white font-semibold btn-ungu">OK</button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+        }
+
+        function startQuiz() {
+            // Menggabungkan semua pertanyaan dan menginisialisasi status jawaban
+            currentQuiz = [
+                ...initialQuestions.mudah,
+                ...initialQuestions.penerapan,
+                ...initialQuestions.analisis
+            ].sort(() => Math.random() - 0.5); // Mengacak urutan
+            
+            // Tambahkan status ke setiap soal untuk tracking
+            currentQuiz = currentQuiz.map(q => ({
+                ...q,
+                userAnswerIndex: null, // Index jawaban yang dipilih (null jika belum)
+                isAnswered: false,    // Status apakah sudah dijawab (dikunci)
+                isCorrect: false      // Status jawaban benar/salah
+            }));
+
+            currentQuestionIndex = 0;
+            correctAnswersScore = 0; // Reset score
+            
+            document.getElementById('total-questions').textContent = currentQuiz.length;
+            
+            loadQuestion(currentQuestionIndex);
+            showScreen('quiz-screen');
+        }
+        
+        // --- Fungsi Kuis ---
+        function loadQuestion(index) {
+            if (index < 0 || index >= currentQuiz.length) {
+                // Batas navigasi
+                return; 
+            }
+
+            const qData = currentQuiz[index];
+            currentQuestionIndex = index;
+            const isAnswered = qData.isAnswered;
+            
+            // 1. Reset UI dan Perbarui Header
+            document.getElementById('current-question-number').textContent = index + 1;
+            // Hitung progress: Soal yang sudah dijawab + soal yang sedang dikerjakan
+            const progress = ((currentQuiz.filter(q => q.isAnswered).length + (isAnswered ? 0 : 1)) / currentQuiz.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+
+            document.getElementById('question-text').textContent = `${index + 1}. ${qData.q}`;
+            document.getElementById('answer-options').innerHTML = '';
+            
+            const feedbackArea = document.getElementById('feedback-area');
+            feedbackArea.classList.add('hidden');
+            feedbackArea.classList.remove('bg-aksen-hijau/20', 'bg-aksen-merah/20', 'border-aksen-hijau', 'border-aksen-merah');
+
+            // 2. Render Opsi Jawaban
+            const optionsContainer = document.getElementById('answer-options');
+            qData.options.forEach((option, i) => {
+                const optionDiv = document.createElement('div');
+                // Tambahkan A, B, C, D di depan opsi
+                const prefix = String.fromCharCode(65 + i); 
+                optionDiv.textContent = `${prefix}. ${option.text}`;
+                
+                optionDiv.className = `option-item p-3 rounded-lg border-2 transition duration-150 text-left text-gray-200`;
+                optionDiv.setAttribute('data-index', i);
+
+                if (!isAnswered) {
+                    // Jika belum dijawab, biarkan interaktif
+                    optionDiv.classList.add('bg-gray-700', 'border-gray-700', 'hover:bg-gray-600', 'cursor-pointer');
+                    optionDiv.onclick = () => selectAnswer(optionDiv);
+
+                    if (i === qData.userAnswerIndex) {
+                        // Highlight jika sudah pernah dipilih tapi belum disubmit
+                        optionDiv.classList.add('bg-ungu-terang/50', 'border-ungu-terang');
+                        optionDiv.setAttribute('selected', 'true');
+                    }
+                } else {
+                    // Jika sudah dijawab (dikunci), tampilkan hasil dan feedback
+                    optionDiv.classList.add('cursor-default', 'bg-gray-800');
+
+                    if (option.correct) {
+                        optionDiv.classList.add('bg-aksen-hijau/20', 'border-aksen-hijau'); // Jawaban Benar
+                    } else if (i === qData.userAnswerIndex) {
+                        optionDiv.classList.add('bg-aksen-merah/20', 'border-aksen-merah'); // Jawaban Salah Anda
+                    }
+                }
+                
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // 3. Atur Tampilan Tombol
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('submit-btn').classList.toggle('hidden', isAnswered);
+            
+            // Tombol next selalu ada, tapi fungsinya bisa submit/next/finish
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.classList.remove('hidden');
+
+            if (index === currentQuiz.length - 1) {
+                // Soal terakhir
+                nextBtn.textContent = isAnswered ? 'Lihat Hasil &raquo;' : 'Soal Berikutnya »';
+                nextBtn.disabled = isAnswered ? false : true; // Hanya aktif jika sudah dijawab
+                if (isAnswered) {
+                    nextBtn.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                    nextBtn.classList.add('btn-ungu', 'shadow-lg');
+                } else {
+                    nextBtn.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                    nextBtn.classList.remove('btn-ungu', 'shadow-lg');
+                }
+            } else {
+                // Bukan soal terakhir
+                nextBtn.textContent = 'Soal Berikutnya »';
+                nextBtn.disabled = isAnswered ? false : true; // Hanya aktif jika sudah dijawab
+                nextBtn.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                nextBtn.classList.remove('btn-ungu', 'shadow-lg');
+            }
+            
+            // Jika sudah dijawab, tampilkan feedback
+            if (isAnswered) {
+                displayFeedback(qData, qData.isCorrect);
+            }
+        }
+
+        function selectAnswer(selectedDiv) {
+            // Logic ini hanya berjalan jika soal belum dijawab (isAnswered == false)
+            if (currentQuiz[currentQuestionIndex].isAnswered) return; 
+
+            document.querySelectorAll('.option-item').forEach(div => {
+                div.classList.remove('bg-ungu-terang/50', 'border-ungu-terang');
+                div.removeAttribute('selected');
+            });
+            
+            selectedDiv.classList.add('bg-ungu-terang/50', 'border-ungu-terang');
+            selectedDiv.setAttribute('selected', 'true');
+        }
+
+        function displayFeedback(qData, isCorrect) {
+            const feedbackArea = document.getElementById('feedback-area');
+            const rationaleText = document.getElementById('rationale-text');
+            const hintText = document.getElementById('hint-text');
+            const correctOption = qData.options.find(opt => opt.correct);
+
+            if (isCorrect) {
+                rationaleText.innerHTML = `<span class="font-bold text-aksen-hijau">🎉 Selamat, Jawaban Anda Benar!</span> <span class="text-gray-200">Penjelasan: ${correctOption.rationale}</span>`;
+                feedbackArea.classList.add('bg-aksen-hijau/20', 'border-aksen-hijau');
+            } else {
+                rationaleText.innerHTML = `<span class="font-bold text-aksen-merah">😔 Jawaban Anda Kurang Tepat.</span> <span class="text-gray-200">Penjelasan yang Benar: ${correctOption.rationale}</span>`;
+                feedbackArea.classList.add('bg-aksen-merah/20', 'border-aksen-merah');
+            }
+            
+            const hintMap = {
+                'Mudah': 'Ingat kembali definisi dan istilah dasar pada periode tersebut.',
+                'Penerapan': 'Pertimbangkan implikasi kebijakan dan perubahan sistem pemerintahan.',
+                'Analisis': 'Analisis kasus berdasarkan kronologi dan dampak perubahan konstitusi.'
+            };
+            hintText.textContent = `[Tips Belajar: ${hintMap[qData.cat]}]`;
+            
+            feedbackArea.classList.remove('hidden');
+        }
+
+        function checkAnswer() {
+            const qData = currentQuiz[currentQuestionIndex];
+            
+            if (qData.isAnswered) {
+                showMessageBox('Informasi', 'Anda sudah menjawab soal ini. Anda dapat melihat kembali penjelasan di bawah.');
+                return;
+            }
+
+            const selectedOption = document.querySelector('.option-item[selected="true"]');
+            
+            if (!selectedOption) {
+                showMessageBox('Peringatan', 'Mohon pilih salah satu jawaban sebelum menekan tombol "Jawab".');
+                return;
+            }
+
+            const selectedIndex = parseInt(selectedOption.getAttribute('data-index'));
+            const isCorrect = qData.options[selectedIndex].correct;
+
+            // 1. Simpan Jawaban (Lock State)
+            qData.userAnswerIndex = selectedIndex;
+            qData.isAnswered = true;
+            qData.isCorrect = isCorrect;
+            
+            // 2. Perbarui Skor (jumlah jawaban benar)
+            if (isCorrect) {
+                correctAnswersScore += 1; 
+            }
+
+            // 3. Muat Ulang untuk menampilkan Feedback dan mengunci pilihan
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function nextQuestion() {
+            // Jika tombol 'Lihat Hasil'
+            if (currentQuestionIndex === currentQuiz.length - 1 && currentQuiz[currentQuestionIndex].isAnswered) {
+                showResults();
+            } else if (currentQuestionIndex < currentQuiz.length - 1 && currentQuiz[currentQuestionIndex].isAnswered) {
+                // Lanjut ke soal berikutnya (jika sudah dijawab)
+                loadQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function showResults() {
+            // Hitung jumlah jawaban benar
+            const correctAnswersCount = currentQuiz.filter(q => q.isCorrect).length;
+
+            const totalQuestions = currentQuiz.length;
+            
+            // Hitung skor akhir dalam skala 0-100
+            const finalScore100 = Math.round((correctAnswersCount / totalQuestions) * 100);
+            
+            let message = '';
+            
+            // Apresiasi berdasarkan finalScore100 (persentase)
+            if (finalScore100 === 100) {
+                message = "Sempurna! Pemahaman Anda tentang Periodisasi UUD di Indonesia luar biasa! Pertahankan prestasi ini. [Image of Gold Medal]";
+                document.getElementById('final-score').className = 'text-7xl font-extrabold mt-2 text-aksen-hijau';
+            } else if (finalScore100 >= 90) {
+                message = "Luar Biasa! Anda hampir sempurna. Sedikit lagi dan Anda akan menguasai materi ini! ";
+                document.getElementById('final-score').className = 'text-7xl font-extrabold mt-2 text-aksen-hijau';
+            } else if (finalScore100 >= 75) {
+                message = "Bagus sekali! Anda memiliki pemahaman yang kuat. Tinjau kembali beberapa soal yang salah untuk hasil maksimal. [Image of Thumbs Up]";
+                document.getElementById('final-score').className = 'text-7xl font-extrabold mt-2 text-kuning-emas';
+            } else if (finalScore100 >= 50) {
+                message = "Cukup Baik. Anda sudah menguasai sebagian materi. Fokus pada area yang sulit dan coba lagi. ";
+                document.getElementById('final-score').className = 'text-7xl font-extrabold mt-2 text-kuning-emas';
+            } else {
+                message = "Terus semangat belajar! Pelajari kembali materi Anda, terutama bagian Periodisasi dan Penerapan UUD, lalu coba lagi. ";
+                document.getElementById('final-score').className = 'text-7xl font-extrabold mt-2 text-aksen-merah';
+            }
+
+            document.getElementById('result-name').textContent = studentData.name;
+            document.getElementById('result-class').textContent = studentData.class;
+            
+            // Tampilkan skor 0-100
+            document.getElementById('final-score').textContent = `${finalScore100}`; 
+            
+            document.getElementById('score-message').textContent = message;
+            
+            // Tampilkan jumlah jawaban benar
+            document.getElementById('correct-answers-display').textContent = `Jumlah Jawaban Benar: ${correctAnswersCount} dari ${totalQuestions} soal`;
+
+            document.getElementById('progress-bar').style.width = '100%';
+
+            showScreen('results-screen');
+        }
+
+        function resetQuiz() {
+            showScreen('login-screen');
+        }
+    </script>
+</body>
+</html>
